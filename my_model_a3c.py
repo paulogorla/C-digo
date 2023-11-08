@@ -82,34 +82,6 @@ class MasterAgent():
         plt.savefig('results/4/rewards_30000_eps.png')
         plt.show()
 
-    def test(self):
-        states = []
-        actions = []
-        env = RouteEnvironment(data)
-        state = env.reset()
-        model = self.global_model
-        model_path = os.path.join('results/model_{}.h5'.format("route"))
-        print('Loading model from: {}'.format(model_path))
-        model.load_weights(model_path)
-        done = False
-        step_counter = 0
-        reward_sum = 0
-        try:
-            while not done:
-                policy, value = model(tf.convert_to_tensor(state, dtype=tf.float32))
-                policy = tf.nn.log_softmax(policy)
-                action = np.argmax(np.exp(policy))
-                state, next_state, reward, done = env.step(action)
-                reward_sum += reward
-                states.append(state)
-                actions.append(action)
-                state = next_state
-                print("{}. Reward: {}, action: {}".format(step_counter, reward_sum, action))
-                step_counter += 1
-        except KeyboardInterrupt:
-            print("Received Keyboard Interrupt. Shutting down.")
-        return states, actions
-
 class Memory():
     def __init__(self):
         self.states = []
@@ -195,10 +167,6 @@ class Worker(threading.Thread):
                             best_score_df['actions'] = best_score_mem.action
                             best_score_df['reward'] = best_score_mem.rewards
                             best_score_df.to_excel("results/4/best_model_actions.xlsx")
-                        # if self.ep_reward > 2500:
-                        #     print("Saving best model to {}, episode score: {}".format(self.save_dir,self.ep_reward))
-                        #     self.global_model.save_weights(os.path.join(self.save_dir,
-                        #         'model_{}_score_{}.h5'.format("route",str(self.ep_reward))))
                 ep_steps += 1
                 current_state = new_state
                 total_step += 1
@@ -263,12 +231,3 @@ ACTION_SIZE = 5
 
 master = MasterAgent(STATE_SIZE,ACTION_SIZE)
 master.train()
-
-# states, actions = master.test()
-# print(actions)
-# states = pd.DataFrame(states)
-# print(states)
-
-# states, actions = worker.test()
-# print(actions)
-# print(states)
